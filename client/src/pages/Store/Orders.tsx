@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Tag, Card, Button, Modal, Descriptions } from 'antd';
+import { Table, Tag, Card, Button, Modal, Descriptions, Space, message } from 'antd';
 import { ordersAPI } from '../../api';
 import { useAuthStore } from '../../store';
+import PaymentModal from '../../components/common/PaymentModal';
 import type { Order } from '../../types';
 import dayjs from 'dayjs';
 
@@ -15,21 +16,34 @@ export default function StoreOrders() {
   const [loading, setLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detail, setDetail] = useState<Order | null>(null);
+  const [payOrder, setPayOrder] = useState<{ orderNo: string; amount: number } | null>(null);
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const fetchData = () => {
     if (!user) { navigate('/login'); return; }
     setLoading(true);
-    ordersAPI.list({ pageSize: 50 }).then(({ data }) => setData(data.list)).finally(() => setLoading(false));
-  }, []);
+    ordersAPI.list({ pageSize: 50 }).then(({ data: d }) => setData(d.list)).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const columns = [
     { title: '订单号', dataIndex: 'orderNo', width: 180 },
     { title: '金额', dataIndex: 'totalAmount', render: (v: number) => `¥${v.toFixed(2)}` },
-    { title: '状态', dataIndex: 'status', render: (v: string) => <Tag color={v === 'completed' ? 'green' : v === 'cancelled' ? 'red' : 'blue'}>{statusMap[v] || v}</Tag> },
+    { title: '状态', dataIndex: 'status', render: (v: string, r: Order) => {
+      const label = r.paymentStatus === 'unpaid' && v === 'pending' ? '待付款' : (statusMap[v] || v);
+      return <Tag color={v === 'completed' ? 'green' : v === 'cancelled' ? 'red' : v === 'pending' ? 'orange' : 'blue'}>{label}</Tag>;
+    }},
     { title: '时间', dataIndex: 'createdAt', render: (v: string) => dayjs(v).format('YYYY-MM-DD HH:mm') },
-    { title: '操作', render: (_: any, r: Order) => <Button size="small" onClick={async () => { const { data } = await ordersAPI.get(r.id); setDetail(data); setDetailOpen(true); }}>详情</Button> },
+    { title: '操作', render: (_: any, r: Order) => (
+      <Space>
+        <Button size="small" onClick={async () => { const { data } = await ordersAPI.get(r.id); setDetail(data); setDetailOpen(true); }}>详情</Button>
+        {r.paymentStatus === 'unpaid' && (
+          <Button size="small" type="primary" onClick={() => setPayOrder({ orderNo: r.orderNo, amount: r.totalAmount })}>去支付</Button>
+        )}
+      </Space>
+    )},
   ];
 
   return (
@@ -53,6 +67,10 @@ export default function StoreOrders() {
             ]} />
         )}
       </Modal>
+      {payOrder && (
+        <PaymentModal open={!!payOrder} orderNo={payOrder.orderNo} amount={payOrder.amount}
+          onClose={() => setPayOrder(null)} onPaid={() => { message.success('支付成功！'); setPayOrder(null); fetchData(); }} />
+      )}
     </Card>
   );
 }

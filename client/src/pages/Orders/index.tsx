@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Space, Select, Popconfirm, message, Card, Modal, Descriptions } from 'antd';
 import { ordersAPI, logisticsAPI } from '../../api';
 import type { Order } from '../../types';
-import PaymentModal from './Payment';
+import PaymentModal from '../../components/common/PaymentModal';
 
 const statusMap: Record<string, string> = {
   pending: '待发货', paid: '已付款', shipped: '已发货', delivered: '已送达', completed: '已完成', cancelled: '已取消',

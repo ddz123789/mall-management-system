@@ -4,6 +4,7 @@ import { Table, Button, InputNumber, Popconfirm, message, Card, Modal, Input, Em
 import { ShoppingCartOutlined } from '@ant-design/icons';
 import { cartAPI, ordersAPI } from '../../api';
 import { useAuthStore } from '../../store';
+import PaymentModal from '../../components/common/PaymentModal';
 import type { CartItem } from '../../types';
 
 export default function Cart() {
@@ -13,6 +14,7 @@ export default function Cart() {
   const [orderOpen, setOrderOpen] = useState(false);
   const [address, setAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [payOrder, setPayOrder] = useState<{ orderNo: string; amount: number } | null>(null);
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
 
@@ -47,11 +49,12 @@ export default function Cart() {
       const items = data
         .filter((d) => selected.includes(d.id))
         .map((d) => ({ productId: d.productId, quantity: d.quantity }));
-      await ordersAPI.create({ items, address: address.trim() });
-      message.success('下单成功！可在「我的订单」中查看');
+      const res = await ordersAPI.create({ items, address: address.trim() });
+      message.success('下单成功，请支付');
       setOrderOpen(false);
       setSelected([]);
       setAddress('');
+      setPayOrder({ orderNo: res.data.orderNo, amount: res.data.totalAmount });
       fetchData();
     } catch (err: any) {
       message.error(err.response?.data?.message || '下单失败，请重试');
@@ -123,6 +126,10 @@ export default function Cart() {
           </div>
         </Space>
       </Modal>
+      {payOrder && (
+        <PaymentModal open={!!payOrder} orderNo={payOrder.orderNo} amount={payOrder.amount}
+          onClose={() => setPayOrder(null)} onPaid={() => { message.success('支付成功！'); setPayOrder(null); }} />
+      )}
     </Card>
   );
 }
