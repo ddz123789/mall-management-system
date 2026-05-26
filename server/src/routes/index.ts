@@ -12,6 +12,7 @@ import * as coupons from '../controllers/coupons';
 import * as logistics from '../controllers/logistics';
 import * as inventory from '../controllers/inventory';
 import * as dashboard from '../controllers/dashboard';
+import * as payment from '../controllers/payment';
 
 const router = Router();
 
@@ -87,5 +88,12 @@ router.put('/logistics/:id', authenticate, authorize('admin', 'seller'), logisti
 router.get('/inventory', authenticate, authorize('admin', 'seller'), inventory.list);
 router.post('/inventory/adjust', authenticate, authorize('admin', 'seller'), inventory.adjustStock);
 router.get('/inventory/logs', authenticate, authorize('admin', 'seller'), inventory.logs);
+
+// Payment
+router.post('/payment/pay', authenticate, payment.pay);
+router.get('/payment/query/:orderNo', authenticate, payment.queryPayment);
+router.post('/payment/alipay/notify', payment.alipayNotify);
+router.post('/payment/wechat/notify', payment.wechatNotify);
+router.get('/payment/alipay/return', payment.alipayReturn);
 
 export default router;

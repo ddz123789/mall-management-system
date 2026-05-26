@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Space, Select, Popconfirm, message, Card, Modal, Descriptions } from 'antd';
 import { ordersAPI, logisticsAPI } from '../../api';
 import type { Order } from '../../types';
+import PaymentModal from './Payment';
 
 const statusMap: Record<string, string> = {
   pending: '待发货', paid: '已付款', shipped: '已发货', delivered: '已送达', completed: '已完成', cancelled: '已取消',
@@ -20,6 +21,8 @@ export default function Orders() {
   const [detail, setDetail] = useState<Order | null>(null);
   const [logisticsOpen, setLogisticsOpen] = useState(false);
   const [logisticsForm, setLogisticsForm] = useState({ company: '', trackingNo: '' });
+  const [payOpen, setPayOpen] = useState(false);
+  const [payingOrder, setPayingOrder] = useState<Order | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -72,10 +75,8 @@ export default function Orders() {
       render: (_: any, record: Order) => (
         <Space>
           <Button size="small" onClick={() => showDetail(record.id)}>详情</Button>
-          {record.status === 'pending' && (
-            <Popconfirm title="确认已付款?" onConfirm={() => ordersAPI.updatePayment(record.id).then(fetchData)}>
-              <Button size="small" type="primary">确认付款</Button>
-            </Popconfirm>
+          {record.paymentStatus === 'unpaid' && (
+            <Button size="small" type="primary" onClick={() => { setPayingOrder(record); setPayOpen(true); }}>去支付</Button>
           )}
           {record.status === 'paid' && (
             <Button size="small" onClick={() => { setDetail(record); setLogisticsOpen(true); }}>发货</Button>
@@ -126,6 +127,10 @@ export default function Orders() {
             value={logisticsForm.trackingNo} onChange={(e) => setLogisticsForm({ ...logisticsForm, trackingNo: e.target.value })} />
         </Space>
       </Modal>
+      {payingOrder && (
+        <PaymentModal open={payOpen} orderNo={payingOrder.orderNo} amount={payingOrder.totalAmount}
+          onClose={() => { setPayOpen(false); setPayingOrder(null); }} onPaid={fetchData} />
+      )}
     </Card>
   );
 }
