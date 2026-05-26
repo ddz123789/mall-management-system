@@ -6,7 +6,6 @@ import {
   ShopOutlined,
   AppstoreOutlined,
   UserOutlined,
-  ShoppingCartOutlined,
   OrderedListOutlined,
   StarOutlined,
   GiftOutlined,
@@ -16,23 +15,23 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../../store';
 
 const { Header, Sider, Content } = Layout;
 
 const menuItems = [
-  { key: '/', icon: <DashboardOutlined />, label: '仪表盘' },
-  { key: '/products', icon: <ShopOutlined />, label: '商品管理' },
-  { key: '/categories', icon: <AppstoreOutlined />, label: '分类管理', roles: ['admin'] },
-  { key: '/users', icon: <UserOutlined />, label: '用户管理', roles: ['admin'] },
-  { key: '/orders', icon: <OrderedListOutlined />, label: '订单管理' },
-  { key: '/cart', icon: <ShoppingCartOutlined />, label: '购物车' },
-  { key: '/inventory', icon: <InboxOutlined />, label: '库存管理', roles: ['admin', 'seller'] },
-  { key: '/reviews', icon: <StarOutlined />, label: '评价管理' },
-  { key: '/coupons', icon: <GiftOutlined />, label: '优惠券', roles: ['admin'] },
-  { key: '/logistics', icon: <CarOutlined />, label: '物流追踪', roles: ['admin', 'seller'] },
-  { key: '/reports', icon: <BarChartOutlined />, label: '报表', roles: ['admin'] },
+  { key: '/admin', icon: <DashboardOutlined />, label: '仪表盘' },
+  { key: '/admin/products', icon: <ShopOutlined />, label: '商品管理' },
+  { key: '/admin/categories', icon: <AppstoreOutlined />, label: '分类管理', roles: ['admin'] },
+  { key: '/admin/users', icon: <UserOutlined />, label: '用户管理', roles: ['admin'] },
+  { key: '/admin/orders', icon: <OrderedListOutlined />, label: '订单管理' },
+  { key: '/admin/inventory', icon: <InboxOutlined />, label: '库存管理', roles: ['admin', 'seller'] },
+  { key: '/admin/reviews', icon: <StarOutlined />, label: '评价管理' },
+  { key: '/admin/coupons', icon: <GiftOutlined />, label: '优惠券', roles: ['admin'] },
+  { key: '/admin/logistics', icon: <CarOutlined />, label: '物流追踪', roles: ['admin', 'seller'] },
+  { key: '/admin/reports', icon: <BarChartOutlined />, label: '报表', roles: ['admin'] },
 ];
 
 export default function MainLayout() {
@@ -57,14 +56,17 @@ export default function MainLayout() {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[location.pathname === '/' ? '/' : `/${location.pathname.split('/')[1]}`]}
+          selectedKeys={[location.pathname === '/admin' ? '/admin' : location.pathname]}
           items={filteredMenu}
           onClick={({ key }) => navigate(key)}
         />
       </Sider>
       <Layout>
         <Header style={{ padding: '0 24px', background: colorBgContainer, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Button type="text" icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />} onClick={() => setCollapsed(!collapsed)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Button type="text" icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />} onClick={() => setCollapsed(!collapsed)} />
+            <Button type="link" icon={<HomeOutlined />} onClick={() => navigate('/')}>返回商城</Button>
+          </div>
           <Dropdown
             menu={{
               items: [

@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, InputNumber, Select, Space, Tag, Popconfirm, Upload, message, Card } from 'antd';
 import { PlusOutlined, UploadOutlined, SearchOutlined } from '@ant-design/icons';
 import { productsAPI, categoriesAPI } from '../../api';
-import { useAuthStore } from '../../store';
 import type { Product, Category } from '../../types';
 
 export default function Products() {
-  const user = useAuthStore((s) => s.user);
-  const canEdit = user?.role === 'admin' || user?.role === 'seller';
   const [data, setData] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -72,22 +69,16 @@ export default function Products() {
       render: (v: string) => <Tag color={v === 'on' ? 'green' : 'red'}>{v === 'on' ? '上架' : '下架'}</Tag>,
     },
     {
-      title: '操作', width: canEdit ? 220 : 80,
+      title: '操作', width: 220,
       render: (_: any, record: Product) => (
         <Space>
-          {canEdit ? (
-            <>
-              <Button size="small" onClick={() => { setEditing(record); form.setFieldsValue(record); setModalOpen(true); fetchCategories(); }}>编辑</Button>
-              <Button size="small" onClick={() => productsAPI.update(record.id, { status: record.status === 'on' ? 'off' : 'on' }).then(() => fetchData())}>
-                {record.status === 'on' ? '下架' : '上架'}
-              </Button>
-              <Popconfirm title="确定删除?" onConfirm={() => onDelete(record.id)}>
-                <Button size="small" danger>删除</Button>
-              </Popconfirm>
-            </>
-          ) : (
-            <Button size="small" onClick={() => { setEditing(record); form.setFieldsValue(record); setModalOpen(true); }}>查看详情</Button>
-          )}
+          <Button size="small" onClick={() => { setEditing(record); form.setFieldsValue(record); setModalOpen(true); fetchCategories(); }}>编辑</Button>
+          <Button size="small" onClick={() => productsAPI.update(record.id, { status: record.status === 'on' ? 'off' : 'on' }).then(() => fetchData())}>
+            {record.status === 'on' ? '下架' : '上架'}
+          </Button>
+          <Popconfirm title="确定删除?" onConfirm={() => onDelete(record.id)}>
+            <Button size="small" danger>删除</Button>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -97,17 +88,15 @@ export default function Products() {
     <Card title="商品管理" extra={
       <Space>
         <Input.Search placeholder="搜索商品" onSearch={setKeyword} style={{ width: 200 }} />
-        {canEdit && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModalOpen(true); fetchCategories(); }}>
-            新增商品
-          </Button>
-        )}
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModalOpen(true); fetchCategories(); }}>
+          新增商品
+        </Button>
       </Space>
     }>
       <Table columns={columns} dataSource={data} rowKey="id" loading={loading}
         pagination={{ current: page, pageSize, total, onChange: (p, ps) => { setPage(p); setPageSize(ps); } }} />
-      <Modal title={!canEdit ? '商品详情' : editing ? '编辑商品' : '新增商品'} open={modalOpen} onCancel={() => { setModalOpen(false); setEditing(null); form.resetFields(); }} onOk={canEdit ? () => form.submit() : undefined} okButtonProps={canEdit ? {} : { style: { display: 'none' } }} cancelText={canEdit ? '取消' : '关闭'} width={600}>
-        <Form form={form} layout="vertical" onFinish={onFinish} disabled={!canEdit}>
+      <Modal title={editing ? '编辑商品' : '新增商品'} open={modalOpen} onCancel={() => { setModalOpen(false); setEditing(null); form.resetFields(); }} onOk={() => form.submit()} width={600}>
+        <Form form={form} layout="vertical" onFinish={onFinish}>
           <Form.Item name="name" label="商品名称" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="description" label="描述"><Input.TextArea rows={3} /></Form.Item>
           <Form.Item name="price" label="价格" rules={[{ required: true }]}><InputNumber min={0} step={0.01} style={{ width: '100%' }} /></Form.Item>
